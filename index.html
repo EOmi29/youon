@@ -18,14 +18,14 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            overflow: hidden;
+            overflow: auto;
             user-select: none;
         }
         #game-container {
             position: relative;
             width: 100%;
-            max-width: 800px;
-            height: 600px;
+            max-width: 1200px;
+            height: 900px;
             background-color: #f5f5dc;
             background-image: radial-gradient(#d2b48c 10%, transparent 11%), radial-gradient(#d2b48c 10%, transparent 11%);
             background-size: 20px 20px;
@@ -167,18 +167,18 @@
         /* 問題の標的 */
         #target {
             position: absolute;
-            top: 100px;
-            width: 160px;
-            height: 160px;
+            top: 150px;
+            width: 240px;
+            height: 240px;
             background-color: #fff;
-            border: 4px solid #5c4033;
-            border-radius: 20px;
+            border: 6px solid #5c4033;
+            border-radius: 28px;
             box-shadow: 0 8px 15px rgba(0,0,0,0.3);
             display: flex;
             justify-content: center;
             align-items: center;
             box-sizing: border-box;
-            padding: 10px;
+            padding: 15px;
             z-index: 5;
         }
         #target img {
@@ -300,69 +300,6 @@
             opacity: 0;
             transition: all 0.7s ease-in !important;
         }
-
-        #debug-btn {
-            margin-top: 15px;
-            width: auto;
-            padding: 8px 16px;
-            font-size: 14px;
-            background: #888;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        #debug-screen {
-            position: fixed !important;
-            top: 0; left: 0;
-            width: 100vw !important;
-            height: 100vh !important;
-            background: #fff;
-            z-index: 500;
-            overflow-y: auto !important;
-        }
-
-        #debug-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 10px;
-        }
-
-        .debug-item {
-            background: #fff;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            padding: 6px;
-            text-align: center;
-            font-size: 12px;
-        }
-
-        .debug-item.error {
-            border-color: #e74c3c;
-            background: #fdecea;
-        }
-
-        .debug-item img {
-            width: 100%;
-            height: 80px;
-            object-fit: contain;
-            background: #f0f0f0;
-        }
-
-        .debug-item .debug-word {
-            font-weight: bold;
-            margin-top: 4px;
-        }
-
-        .debug-item .debug-file {
-            color: #666;
-            word-break: break-all;
-        }
-
-        .debug-item.error .debug-file::before {
-            content: "❌ ";
-        }
     </style>
 </head>
 <body>
@@ -390,23 +327,9 @@
             ゃゅょのまえは　なにかな？
         </button>
 
-        <button id="debug-btn" onclick="showDebugScreen()">
-            画像チェック(デバッグ)
+        <button id="hint-toggle-btn" class="btn" style="width:auto; padding:8px 20px; font-size:16px; margin-top:10px; background:#7f8c8d;" onclick="toggleHintMode()">
+            ひらがなヒント: <span id="hint-toggle-label">なし</span>
         </button>
-    </div>
-
-    <!-- デバッグ：画像いちらん画面 -->
-    <div id="debug-screen" class="screen" style="display:none; flex-direction:column; align-items:stretch; padding:0;">
-        <div style="position:sticky; top:0; background:#fff; z-index:10; padding:15px 20px; border-bottom:2px solid #ccc; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <h2 style="margin:0;">画像いちらん <span id="debug-count"></span></h2>
-            <label style="font-size:14px; display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" id="debug-error-only" onchange="applyDebugFilter()">
-                エラーのみ表示
-            </label>
-            <div id="debug-summary" style="font-weight:bold;"></div>
-            <button class="btn" style="width:auto; padding:10px 20px; font-size:16px;" onclick="backToTitle()">とじる</button>
-        </div>
-        <div id="debug-grid" style="padding:20px;"></div>
     </div>
 
     <!-- ゲーム画面 -->
@@ -418,7 +341,10 @@
             <div>スコア: <span id="score-display">0</span></div>
         </div>
         
-        <div id="target"><img id="target-img" src="" alt="問題画像"></div>
+        <div id="target">
+            <img id="target-img" src="" alt="問題画像">
+            <div id="word-hint" style="display:none; position:absolute; top:100%; left:0; width:100%; margin-top:8px; text-align:center; font-size:22px; font-weight:bold; color:#333; background:rgba(255,255,255,0.9); border-radius:10px; padding:4px 6px; box-sizing:border-box; white-space:nowrap;"></div>
+        </div>
         
         <div id="shurikens"></div>
         <div id="effect"></div>
@@ -474,9 +400,9 @@
     let timerInterval = null;
     
     let targetX = 0;
-    const targetY = 100;
-    const TARGET_WIDTH = 160;
-    const TARGET_HEIGHT = 160;
+    const targetY = 150;
+    const TARGET_WIDTH = 240;
+    const TARGET_HEIGHT = 240;
     let targetSpeed = 0;
     let lastTime = 0;
     const TOTAL_TIME = 9.0;
@@ -558,6 +484,10 @@
         
         const targetImg = document.getElementById('target-img');
         targetImg.src = "image/" + currentQuestion.image;
+
+        const hintEl = document.getElementById('word-hint');
+        hintEl.innerText = getMaskedWord(currentQuestion);
+        hintEl.style.display = hintMode ? 'block' : 'none';
         
         const containerWidth = document.getElementById('game-container').clientWidth;
         
@@ -708,79 +638,34 @@
 
     function backToTitle() {
         document.getElementById('result-screen').style.display = 'none';
-        document.getElementById('debug-screen').style.display = 'none';
         document.getElementById('title-screen').style.display = 'flex';
     }
 
-    // --- デバッグ：全単語の画像をいちらん表示して、読み込めない画像を探す ---
-    function showDebugScreen() {
-        document.getElementById('title-screen').style.display = 'none';
-        document.getElementById('debug-screen').style.display = 'flex';
+    // --- ひらがなヒント機能 ---
+    // 拗音（きゃ/しゃ/ちゃ など）の部分を「○○」に置きかえて単語を表示する
+    let hintMode = false;
 
-        const grid = document.getElementById('debug-grid');
-        const countEl = document.getElementById('debug-count');
-        const summaryEl = document.getElementById('debug-summary');
-        grid.innerHTML = '';
-        document.getElementById('debug-error-only').checked = false;
-        countEl.innerText = `(ぜんぶで ${WORD_DATA.length} こ)`;
-        summaryEl.innerText = 'よみこみちゅう…';
+    const YOON_VARIANTS = {
+        kya: ["きゃ", "キャ"], kyu: ["きゅ", "キュ"], kyo: ["きょ", "キョ"],
+        sya: ["しゃ", "シャ"], syu: ["しゅ", "シュ"], syo: ["しょ", "ショ"],
+        tya: ["ちゃ", "チャ"], tyu: ["ちゅ", "チュ"], tyo: ["ちょ", "チョ"]
+    };
 
-        let loadedCount = 0;
-        let errorCount = 0;
-        const errorList = [];
-
-        WORD_DATA.forEach((item, index) => {
-            const cell = document.createElement('div');
-            cell.className = 'debug-item';
-
-            const img = document.createElement('img');
-            img.src = 'image/' + item.image;
-            img.alt = item.word;
-
-            img.onload = () => {
-                loadedCount++;
-                cell.dataset.status = 'ok';
-                updateSummary();
-            };
-            img.onerror = () => {
-                errorCount++;
-                cell.classList.add('error');
-                cell.dataset.status = 'error';
-                errorList.push(item.image);
-                updateSummary();
-                applyDebugFilter();
-            };
-
-            const wordDiv = document.createElement('div');
-            wordDiv.className = 'debug-word';
-            wordDiv.innerText = `${index + 1}. ${item.word}`;
-
-            const fileDiv = document.createElement('div');
-            fileDiv.className = 'debug-file';
-            fileDiv.innerText = item.image;
-
-            cell.appendChild(img);
-            cell.appendChild(wordDiv);
-            cell.appendChild(fileDiv);
-            grid.appendChild(cell);
-        });
-
-        function updateSummary() {
-            const checked = loadedCount + errorCount;
-            summaryEl.innerText = `かくにんずみ: ${checked} / ${WORD_DATA.length}　　エラー: ${errorCount} こ`;
+    function getMaskedWord(item) {
+        const variants = YOON_VARIANTS[item.correct] || [];
+        for (const v of variants) {
+            if (item.word.includes(v)) {
+                return item.word.replace(v, "○○");
+            }
         }
+        return item.word; // 万が一見つからない場合はそのまま表示
     }
 
-    function applyDebugFilter() {
-        const errorOnly = document.getElementById('debug-error-only').checked;
-        const cells = document.querySelectorAll('#debug-grid .debug-item');
-        cells.forEach(cell => {
-            if (!errorOnly) {
-                cell.style.display = '';
-            } else {
-                cell.style.display = (cell.dataset.status === 'error') ? '' : 'none';
-            }
-        });
+    function toggleHintMode() {
+        hintMode = !hintMode;
+        document.getElementById('hint-toggle-label').innerText = hintMode ? "あり" : "なし";
+        const hintEl = document.getElementById('word-hint');
+        if (hintEl) hintEl.style.display = hintMode ? 'block' : 'none';
     }
 </script>
 </body>
