@@ -7,7 +7,7 @@ const WORD_DATA = [
     { word: "キャビア", image: "food_caviar.png", correct: "kya" },
     { word: "キャップ", image: "petbottle_cap.png", correct: "kya" },
     { word: "キャンプ", image: "camp_hangou_suisan.png", correct: "kya" },
-    { word: "キャッチャー", image: "ufo_catcher.png", correct: "kya" },
+    { word: "ユーフォ―キャッチャー", image: "ufo_catcher.png", correct: "kya" },
     { word: "キャラメル", image: "caramel.png", correct: "kya" },
     { word: "キャットフード", image: "pet_food_cat.png", correct: "kya" },
     { word: "キャンピングカー", image: "car_campingcar.png", correct: "kya" },
