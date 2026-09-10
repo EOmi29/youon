@@ -647,10 +647,11 @@
             document.getElementById('final-score').innerText = score;
             
             let rank = "";
-            if (score >= 400) rank = "🥷 にんじゃ マスター！";
-            else if (score >= 250) rank = "⚔️ いちにんまえ にんじゃ！";
-            else if (score >= 100) rank = "📜 みならい にんじゃ！";
-            else rank = "🐣 にんじゃの たまご！";
+            if (score >= 400) rank = "🥷 にんじゃ マスター！★★★★★";
+            else if (score >= 330) rank = "💣ベテラン にんじゃ！★★★★";
+            else if (score >= 250) rank = "⚔️ いちにんまえ にんじゃ！★★★";
+            else if (score >= 100) rank = "📜 みならい にんじゃ！★★";
+            else rank = "🐣 にんじゃの たまご！★";
             
             document.getElementById('rank-text').innerText = rank;
         }, 1200);
