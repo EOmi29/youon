@@ -329,11 +329,11 @@
 
     <div id="toggle-btn-row" style="position:absolute; bottom:20px; left:0; width:100%; display:flex; justify-content:center; gap:15px; z-index:15;">
         <button id="hint-toggle-btn" style="width:auto; padding:10px 22px; font-size:16px; border:none; border-radius:10px; cursor:pointer; color:#fff; background:#f39c12;" onclick="toggleHintMode()">
-            ひらがなをひょうじする：<span id="hint-toggle-label">はい</span>
+            ひらがなをだす：<span id="hint-toggle-label">はい</span>
         </button>
 
         <button id="katakana-toggle-btn" style="width:auto; padding:10px 22px; font-size:16px; border:none; border-radius:10px; cursor:pointer; color:#fff; background:#555555;" onclick="toggleKatakanaMode()">
-            カタカナをひらがなにかえる：<span id="katakana-toggle-label">しない</span>
+            カタカナをひらがなに：<span id="katakana-toggle-label">しない</span>
         </button>
     </div>
     </div>
@@ -647,11 +647,10 @@
             document.getElementById('final-score').innerText = score;
             
             let rank = "";
-            if (score >= 400) rank = "🥷 にんじゃ マスター！★★★★★";
-            else if (score >= 330) rank = "💣ベテラン にんじゃ！★★★★";
-            else if (score >= 250) rank = "⚔️ いちにんまえ にんじゃ！★★★";
-            else if (score >= 100) rank = "📜 みならい にんじゃ！★★";
-            else rank = "🐣 にんじゃの たまご！★";
+            if (score >= 400) rank = "🥷 にんじゃ マスター！";
+            else if (score >= 250) rank = "⚔️ いちにんまえ にんじゃ！";
+            else if (score >= 100) rank = "📜 みならい にんじゃ！";
+            else rank = "🐣 にんじゃの たまご！";
             
             document.getElementById('rank-text').innerText = rank;
         }, 1200);
@@ -687,7 +686,9 @@
         const variants = katakanaMode ? [YOON_VARIANTS[item.correct][0]] : YOON_VARIANTS[item.correct];
         for (const v of variants) {
             if (displayWord.includes(v)) {
-                return displayWord.replace(v, "○○");
+                // 同じ拗音が複数回出てくる単語（例：きゅうきゅうばこ）も、
+                // 全ての出現箇所を○○に置きかえる
+                return displayWord.split(v).join("○○");
             }
         }
         return displayWord; // 万が一見つからない場合はそのまま表示
