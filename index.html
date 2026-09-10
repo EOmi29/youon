@@ -313,6 +313,16 @@
             cursor: pointer;
         }
 
+        #debug-screen {
+            position: fixed !important;
+            top: 0; left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: #fff;
+            z-index: 500;
+            overflow-y: auto !important;
+        }
+
         #debug-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -386,13 +396,17 @@
     </div>
 
     <!-- デバッグ：画像いちらん画面 -->
-    <div id="debug-screen" class="screen" style="display:none; flex-direction:column; overflow-y:auto; align-items:stretch; padding:20px; box-sizing:border-box;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+    <div id="debug-screen" class="screen" style="display:none; flex-direction:column; align-items:stretch; padding:0;">
+        <div style="position:sticky; top:0; background:#fff; z-index:10; padding:15px 20px; border-bottom:2px solid #ccc; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
             <h2 style="margin:0;">画像いちらん <span id="debug-count"></span></h2>
+            <label style="font-size:14px; display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" id="debug-error-only" onchange="applyDebugFilter()">
+                エラーのみ表示
+            </label>
+            <div id="debug-summary" style="font-weight:bold;"></div>
             <button class="btn" style="width:auto; padding:10px 20px; font-size:16px;" onclick="backToTitle()">とじる</button>
         </div>
-        <div id="debug-summary" style="margin-bottom:10px; font-weight:bold;"></div>
-        <div id="debug-grid"></div>
+        <div id="debug-grid" style="padding:20px;"></div>
     </div>
 
     <!-- ゲーム画面 -->
@@ -707,6 +721,7 @@
         const countEl = document.getElementById('debug-count');
         const summaryEl = document.getElementById('debug-summary');
         grid.innerHTML = '';
+        document.getElementById('debug-error-only').checked = false;
         countEl.innerText = `(ぜんぶで ${WORD_DATA.length} こ)`;
         summaryEl.innerText = 'よみこみちゅう…';
 
@@ -724,13 +739,16 @@
 
             img.onload = () => {
                 loadedCount++;
+                cell.dataset.status = 'ok';
                 updateSummary();
             };
             img.onerror = () => {
                 errorCount++;
                 cell.classList.add('error');
+                cell.dataset.status = 'error';
                 errorList.push(item.image);
                 updateSummary();
+                applyDebugFilter();
             };
 
             const wordDiv = document.createElement('div');
@@ -751,6 +769,18 @@
             const checked = loadedCount + errorCount;
             summaryEl.innerText = `かくにんずみ: ${checked} / ${WORD_DATA.length}　　エラー: ${errorCount} こ`;
         }
+    }
+
+    function applyDebugFilter() {
+        const errorOnly = document.getElementById('debug-error-only').checked;
+        const cells = document.querySelectorAll('#debug-grid .debug-item');
+        cells.forEach(cell => {
+            if (!errorOnly) {
+                cell.style.display = '';
+            } else {
+                cell.style.display = (cell.dataset.status === 'error') ? '' : 'none';
+            }
+        });
     }
 </script>
 </body>
