@@ -40,7 +40,7 @@ const WORD_DATA = [
     { word: "レスキューたい", image: "shizensaigai_resukyutai.png", correct: "kyu" },
     { word: "きょうかい", image: "building_chapel.png", correct: "kyo" },
     { word: "きょうかしょ", image: "textbook_h_kokugo.png", correct: "kyo" },
-    { word: "きょうしつ", image: "bg_school_room.png", correct: "kyo" },
+    { word: "きょうしつ", image: "bg_school_room.jpg", correct: "kyo" },
     { word: "きょうだい", image: "family_kyoudai.png", correct: "kyo" },
     { word: "きょうりゅう", image: "dinosaur_ceratosaurus.png", correct: "kyo" },
     { word: "おきょう", image: "osoushiki_obousan.png", correct: "kyo" },
