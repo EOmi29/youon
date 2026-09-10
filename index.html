@@ -24,8 +24,8 @@
         #game-container {
             position: relative;
             width: 100%;
-            max-width: 1200px;
-            height: 900px;
+            max-width: 960px;
+            height: 720px;
             background-color: #f5f5dc;
             background-image: radial-gradient(#d2b48c 10%, transparent 11%), radial-gradient(#d2b48c 10%, transparent 11%);
             background-size: 20px 20px;
@@ -167,18 +167,18 @@
         /* 問題の標的 */
         #target {
             position: absolute;
-            top: 150px;
-            width: 240px;
-            height: 240px;
+            top: 120px;
+            width: 192px;
+            height: 192px;
             background-color: #fff;
-            border: 6px solid #5c4033;
-            border-radius: 28px;
+            border: 5px solid #5c4033;
+            border-radius: 24px;
             box-shadow: 0 8px 15px rgba(0,0,0,0.3);
             display: flex;
             justify-content: center;
             align-items: center;
             box-sizing: border-box;
-            padding: 15px;
+            padding: 12px;
             z-index: 5;
         }
         #target img {
@@ -330,6 +330,10 @@
         <button id="hint-toggle-btn" class="btn" style="width:auto; padding:8px 20px; font-size:16px; margin-top:10px; background:#7f8c8d;" onclick="toggleHintMode()">
             ひらがなヒント: <span id="hint-toggle-label">なし</span>
         </button>
+
+        <button id="katakana-toggle-btn" class="btn" style="width:auto; padding:8px 20px; font-size:16px; margin-top:10px; background:#7f8c8d;" onclick="toggleKatakanaMode()">
+            カタカナ→ひらがな変換: <span id="katakana-toggle-label">なし</span>
+        </button>
     </div>
 
     <!-- ゲーム画面 -->
@@ -400,9 +404,9 @@
     let timerInterval = null;
     
     let targetX = 0;
-    const targetY = 150;
-    const TARGET_WIDTH = 240;
-    const TARGET_HEIGHT = 240;
+    const targetY = 120;
+    const TARGET_WIDTH = 192;
+    const TARGET_HEIGHT = 192;
     let targetSpeed = 0;
     let lastTime = 0;
     const TOTAL_TIME = 9.0;
@@ -644,6 +648,8 @@
     // --- ひらがなヒント機能 ---
     // 拗音（きゃ/しゃ/ちゃ など）の部分を「○○」に置きかえて単語を表示する
     let hintMode = false;
+    // カタカナをひらがなに変換して表示するモード（1年生1学期の学習向け）
+    let katakanaMode = false;
 
     const YOON_VARIANTS = {
         kya: ["きゃ", "キャ"], kyu: ["きゅ", "キュ"], kyo: ["きょ", "キョ"],
@@ -651,14 +657,23 @@
         tya: ["ちゃ", "チャ"], tyu: ["ちゅ", "チュ"], tyo: ["ちょ", "チョ"]
     };
 
+    // 全角カタカナ(ー等の記号を除く)を、対応するひらがなに変換する
+    function toHiragana(str) {
+        return str.replace(/[\u30a1-\u30f6]/g, (match) => {
+            return String.fromCharCode(match.charCodeAt(0) - 0x60);
+        });
+    }
+
     function getMaskedWord(item) {
-        const variants = YOON_VARIANTS[item.correct] || [];
+        const displayWord = katakanaMode ? toHiragana(item.word) : item.word;
+        // ひらがな変換ONのときは、ひらがな表記の拗音だけを探せばよい
+        const variants = katakanaMode ? [YOON_VARIANTS[item.correct][0]] : YOON_VARIANTS[item.correct];
         for (const v of variants) {
-            if (item.word.includes(v)) {
-                return item.word.replace(v, "○○");
+            if (displayWord.includes(v)) {
+                return displayWord.replace(v, "○○");
             }
         }
-        return item.word; // 万が一見つからない場合はそのまま表示
+        return displayWord; // 万が一見つからない場合はそのまま表示
     }
 
     function toggleHintMode() {
@@ -666,6 +681,16 @@
         document.getElementById('hint-toggle-label').innerText = hintMode ? "あり" : "なし";
         const hintEl = document.getElementById('word-hint');
         if (hintEl) hintEl.style.display = hintMode ? 'block' : 'none';
+    }
+
+    function toggleKatakanaMode() {
+        katakanaMode = !katakanaMode;
+        document.getElementById('katakana-toggle-label').innerText = katakanaMode ? "あり" : "なし";
+        // ゲーム中に切り替えた場合に備えて、表示中のヒントも更新する
+        if (currentQuestion) {
+            const hintEl = document.getElementById('word-hint');
+            if (hintEl) hintEl.innerText = getMaskedWord(currentQuestion);
+        }
     }
 </script>
 </body>
