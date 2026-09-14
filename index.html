@@ -396,6 +396,22 @@
 
     // 単語データは words.js の WORD_DATA を使用（{ word, image, correct }の配列）
 
+    // --- 画像プリロード ---
+    // 出題の瞬間に初めて画像をダウンロードすると、ダウンロード＋デコードが終わるまで
+    // <img>には直前の画像が表示され続けてしまい、体感のタイムラグの原因になる。
+    // これを防ぐため、(1)ページ読み込み直後にWORD_DATA全画像をバックグラウンドで先読みし、
+    // (2)念のため出題のたびに「次に出る1問」の画像も先読みしておく。
+    const imageCache = {};
+    function preloadImage(filename) {
+        if (!filename || imageCache[filename]) return;
+        const img = new Image();
+        img.src = "image/" + filename;
+        imageCache[filename] = img; // 参照を保持してブラウザキャッシュから消えるのを防ぐ
+    }
+    // タイトル画面が表示されている間（プレイヤーがモードを選ぶまでの数秒）に
+    // 全159枚の先読みを開始しておく
+    WORD_DATA.forEach(item => preloadImage(item.image));
+
     let isPlaying = false;
     let isThrowing = false;
     let isTargetStopped = false;
@@ -504,6 +520,12 @@
         
         const targetImg = document.getElementById('target-img');
         targetImg.src = "image/" + currentQuestion.image;
+
+        // 次に出題される1問の画像を先読み（全体プリロードがまだ終わっていない場合の保険）
+        if (questionQueue.length === 0) {
+            questionQueue = shuffleArray(WORD_DATA);
+        }
+        preloadImage(questionQueue[questionQueue.length - 1].image);
 
         const hintEl = document.getElementById('word-hint');
         hintEl.innerText = getMaskedWord(currentQuestion);
