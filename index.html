@@ -373,7 +373,9 @@
     const yoonKanaMap = {
         "kya": "きゃ", "kyu": "きゅ", "kyo": "きょ",
         "sya": "しゃ", "syu": "しゅ", "syo": "しょ",
-        "tya": "ちゃ", "tyu": "ちゅ", "tyo": "ちょ"
+        "tya": "ちゃ", "tyu": "ちゅ", "tyo": "ちょ",
+        "gyu": "ぎゅ", "gyo": "ぎょ",
+        "ja": "じゃ", "ju": "じゅ", "jo": "じょ"
     };
 
     const SYURIKEN_IMG = "image/syuriken.webp";
@@ -497,14 +499,21 @@
         document.getElementById('score-display').innerText = score;
     }
 
+    // 拗音ごとの「行」を表す接頭辞（母音を除いた部分）。
+    // 例: kya→ky / gyu→gy / ja→j 。じゃ行だけ2文字コードなので、
+    // 末尾1文字（母音）を取り除く方式にして両対応させている。
+    const ALL_YOON_BASES = ["ky", "sy", "ty", "gy", "j"];
+
     function getFixedChoices(correctKey, mode) {
-        const base = correctKey.slice(0, 2);
-        const vowel = correctKey.slice(2);
+        const base = correctKey.slice(0, -1);
+        const vowel = correctKey.slice(-1);
 
         if (mode === 1) {
             return [base + "a", base + "u", base + "o"];
         } else {
-            return ["ky" + vowel, "sy" + vowel, "ty" + vowel];
+            // 同じ母音・違う行の中から、正解の行を含む3つをランダムに選ぶ
+            const otherBases = shuffleArray(ALL_YOON_BASES.filter(b => b !== base)).slice(0, 2);
+            return shuffleArray([base, ...otherBases]).map(b => b + vowel);
         }
     }
 
@@ -698,7 +707,9 @@
     const YOON_VARIANTS = {
         kya: ["きゃ", "キャ"], kyu: ["きゅ", "キュ"], kyo: ["きょ", "キョ"],
         sya: ["しゃ", "シャ"], syu: ["しゅ", "シュ"], syo: ["しょ", "ショ"],
-        tya: ["ちゃ", "チャ"], tyu: ["ちゅ", "チュ"], tyo: ["ちょ", "チョ"]
+        tya: ["ちゃ", "チャ"], tyu: ["ちゅ", "チュ"], tyo: ["ちょ", "チョ"],
+        gya: ["ぎゃ", "ギャ"], gyu: ["ぎゅ", "ギュ"], gyo: ["ぎょ", "ギョ"],
+        ja: ["じゃ", "ジャ"], ju: ["じゅ", "ジュ"], jo: ["じょ", "ジョ"]
     };
 
     // 全角カタカナ(ー等の記号を除く)を、対応するひらがなに変換する
@@ -710,8 +721,12 @@
 
     function getMaskedWord(item) {
         const displayWord = katakanaMode ? toHiragana(item.word) : item.word;
+        const variantSet = YOON_VARIANTS[item.correct];
+        // 対応表に無い拗音（今後の追加分など）が来た場合は、エラーで
+        // ゲーム全体が止まらないよう、ヒント無しでそのまま表示する
+        if (!variantSet) return displayWord;
         // ひらがな変換ONのときは、ひらがな表記の拗音だけを探せばよい
-        const variants = katakanaMode ? [YOON_VARIANTS[item.correct][0]] : YOON_VARIANTS[item.correct];
+        const variants = katakanaMode ? [variantSet[0]] : variantSet;
         for (const v of variants) {
             if (displayWord.includes(v)) {
                 // 同じ拗音が複数回出てくる単語（例：きゅうきゅうばこ）も、
