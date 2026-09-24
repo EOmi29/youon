@@ -374,7 +374,7 @@
         "kya": "きゃ", "kyu": "きゅ", "kyo": "きょ",
         "sya": "しゃ", "syu": "しゅ", "syo": "しょ",
         "tya": "ちゃ", "tyu": "ちゅ", "tyo": "ちょ",
-        "gyu": "ぎゅ", "gyo": "ぎょ",
+        "gya": "ぎゃ", "gyu": "ぎゅ", "gyo": "ぎょ",
         "ja": "じゃ", "ju": "じゅ", "jo": "じょ"
     };
 
@@ -417,6 +417,11 @@
     let isPlaying = false;
     let isThrowing = false;
     let isTargetStopped = false;
+    // 手裏剣が飛んでいる間（投げてから着弾するまでの1秒）はtrueにする。
+    // この間だけ「的が画面外に出た＝時間切れミス」の判定を保留し、
+    // 命中判定(checkHit)と時間切れ処理が競合して問題が連続で
+    // 切り替わってしまう不具合を防ぐ。的の見た目の移動自体は止めない。
+    let resultPending = false;
     let currentMode = 1;
     let score = 0;
     let timeLeft = 60;
@@ -453,7 +458,7 @@
             const targetEl = document.getElementById('target');
             targetEl.style.left = targetX + 'px';
 
-            if (targetX < -TARGET_WIDTH) {
+            if (targetX < -TARGET_WIDTH && !resultPending) {
                 score = Math.max(0, score - 10);
                 updateHUD();
                 nextQuestion();
@@ -521,6 +526,7 @@
         if(!isPlaying) return;
         isThrowing = false;
         isTargetStopped = false;
+        resultPending = false;
         
         if (questionQueue.length === 0) {
             questionQueue = shuffleArray(WORD_DATA);
@@ -575,11 +581,7 @@
     function throwShuriken(btnElement, choice) {
         if (isThrowing || !isPlaying || isTargetStopped) return;
         isThrowing = true;
-        // 投げている間（着弾までの1秒間）は的の動きを止める。
-        // 動いたままだと、飛んでいる最中に的が画面外に出てしまい、
-        // 「時間切れでミス」処理と「命中判定」が競合して問題が連続で
-        // 切り替わってしまう不具合があったため。
-        isTargetStopped = true;
+        resultPending = true; // 着弾するまで「画面外＝時間切れ」判定を保留
 
         const containerRect = document.getElementById('game-container').getBoundingClientRect();
         const btnRect = btnElement.getBoundingClientRect();
@@ -600,6 +602,8 @@
         btnElement.style.opacity = '0';
         btnElement.style.pointerEvents = 'none';
 
+        // 的は飛んでいる間も動き続けるので、1秒後にいるはずの位置を
+        // 予測して、そこに着弾させる
         const flightTime = 1.0;
         const targetCenterX_1s = (targetX - (targetSpeed * flightTime)) + (TARGET_WIDTH / 2);
         const targetCenterY = targetY + (TARGET_HEIGHT / 2);
@@ -619,6 +623,7 @@
     }
 
     function checkHit(choice, cloneElement) {
+        resultPending = false; // 着弾した＝これ以降は通常の時間切れ判定に戻す
         const currentTargetCenterX = targetX + (TARGET_WIDTH / 2);
         const currentTargetCenterY = targetY + (TARGET_HEIGHT / 2);
 
@@ -650,7 +655,6 @@
             playWrongSE();
             effectEl.innerText = '✖';
             effectEl.className = 'show-cross';
-            isTargetStopped = false; // 外れたので的の動きを再開する
             
             score = Math.max(0, score - 15);
             
