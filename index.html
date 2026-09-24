@@ -566,6 +566,11 @@
     function throwShuriken(btnElement, choice) {
         if (isThrowing || !isPlaying || isTargetStopped) return;
         isThrowing = true;
+        // 投げている間（着弾までの1秒間）は的の動きを止める。
+        // 動いたままだと、飛んでいる最中に的が画面外に出てしまい、
+        // 「時間切れでミス」処理と「命中判定」が競合して問題が連続で
+        // 切り替わってしまう不具合があったため。
+        isTargetStopped = true;
 
         const containerRect = document.getElementById('game-container').getBoundingClientRect();
         const btnRect = btnElement.getBoundingClientRect();
@@ -636,6 +641,7 @@
             playWrongSE();
             effectEl.innerText = '✖';
             effectEl.className = 'show-cross';
+            isTargetStopped = false; // 外れたので的の動きを再開する
             
             score = Math.max(0, score - 15);
             
